@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>سوق Forsale - النسخة النهائية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* ========================================== */
+        /* 1. الثوابت والألوان */
+        /* ========================================== */
+        :root {
+            --primary: #FFD400;
+            --secondary: #0D1B2A;
+            --background: #08121a;
+            --background-light: #1A2E44;
+            --background-dark: #050b10;
+            --text-light: #FFF;
+            --text-muted: #99AAB5;
+            --success: #2ECC71;
+            --danger: #E74C3C;
+            --accent: #4A90E2;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+        body {
+            background: var(--background);
+            color: var(--text-muted);
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            overflow-x: hidden;
+            width: 100%;
+            padding-bottom: 160px; 
+            min-height: 100vh;
+        }
+
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 10px; }
+
+        /* ========================================== */
+        /* 2. الهيدر */
+        /* ========================================== */
+        .header {
+            background: var(--background-dark); padding: 10px 15px;
+            border-bottom: 2px solid var(--background-light);
+            position: sticky; top: 0; z-index: 100;
+            display: flex; flex-direction: column; gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .logo { color: var(--primary); font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .status-bar { display: flex; gap: 8px; align-items: center; }
+        .status-indicator {
+            background: rgba(255,255,255,0.08); padding: 5px 10px; border-radius: 20px; font-size: 12px; color: white; display: flex; align-items: center; gap: 6px;
+        }
+        .header-actions-scroll {
+            display: flex; gap: 8px; overflow-x: auto; width: 100%; padding-bottom: 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+        }
+        .header-actions-scroll::-webkit-scrollbar { display: none; }
+        
+        .action-btn {
+            padding: 8px 14px; border: none; border-radius: var(--radius);
+            font-weight: bold; cursor: pointer; color: var(--text-light);
+            background: var(--background-light); font-size: 13px;
+            display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; transition: transform 0.2s;
+        }
+        .action-btn:active { transform: scale(0.95); }
+
+        #connectBtn { background: var(--secondary); border: 1px solid var(--primary); color: var(--primary); }
+        #netBtn { background: var(--primary); color: var(--secondary); }
+        #sellBtn { background: var(--accent); } #verifyBtn { background: var(--success); } #logoutBtn { background: var(--danger); }
+
+        /* ========================================== */
+        /* 3. التخطيط والمنتجات */
+        /* ========================================== */
+        .main-layout { display: flex; flex-direction: column; gap: 15px; }
+        .sidebar-area { display: none; }
+        @media (min-width: 900px) { .main-layout { display: grid; grid-template-columns: 3fr 1fr; } .sidebar-area { display: flex; flex-direction: column; gap: 10px; } }
+        
+        .controls { display: flex; gap: 10px; margin: 10px 0; }
+        .search-container { flex: 1; display: flex; align-items: center; background: var(--background-light); border-radius: var(--radius); padding: 5px; }
+        .search-container input { width: 100%; padding: 8px; background: none; border: none; color: white; }
+        .category-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; margin-bottom: 10px; scrollbar-width: none; }
+        .cat { background: var(--background-light); color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; white-space: nowrap; flex-shrink: 0; cursor: pointer; transition: 0.3s; }
+        .cat.active { background: var(--primary); color: var(--secondary); font-weight: bold; }
+
+        #productList { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 10px; 
+            padding-bottom: 50px; 
+        }
+        @media (min-width: 600px) { #productList { grid-template-columns: repeat(3, 1fr); } }
+        
+        .product { background: var(--background-light); border-radius: var(--radius); overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.25); transition: transform 0.2s; }
+        .product:active { transform: scale(0.98); }
+        .product img { width: 100%; height: 120px; object-fit: cover; background: #000; }
+        
+        .product-content { padding: 10px; display: flex; flex-direction: column; gap: 6px; flex-grow: 1; }
+        .product .title { color: var(--primary); font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+        .price { color: white; font-size: 14px; font-weight: bold; }
+        .seller-rating { color: var(--success); font-size: 11px; }
+        
+        .badges { position: absolute; top: 5px; left: 5px; display: flex; gap: 5px; pointer-events: none; z-index: 2; }
+        .badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .badge-ai { background: var(--success); color: white; }
+        .badge-ver { background: var(--primary); color: var(--secondary); }
+        
+        .fav-btn {
+            position: absolute; top: 5px; right: 5px; width: 28px; height: 28px;
+            background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: white; cursor: pointer; z-index: 2; transition: 0.2s;
+        }
+        .fav-btn.active { color: #E74C3C; background: white; }
+
+        /* ========================================== */
+        /* 4. الصفحات الكاملة */
+        /* ========================================== */
+        .full-page-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--background); z-index: 5000; flex-direction: column;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .overlay-header {
+            padding: 15px; background: var(--background-dark); display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--background-light); flex-shrink: 0;
+        }
+        .overlay-title { font-size: 18px; color: var(--primary); font-weight: bold; }
+        .close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+
+        .overlay-content { 
+            padding: 15px; width: 100%; max-width: 800px; margin: 0 auto;
+            overflow-y: auto; flex-grow: 1; padding-bottom: 100px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; color: white; font-size: 14px; margin-bottom: 8px; font-weight: bold; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; background: var(--background-light); border: 1px solid #333; border-radius: var(--radius); color: white; font-size: 15px; }
+        .upload-area { border: 2px dashed var(--accent); padding: 25px; text-align: center; border-radius: var(--radius); cursor: pointer; background: rgba(74, 144, 226, 0.1); }
+        .upload-area i { font-size: 30px; color: var(--accent); margin-bottom: 10px; display: block; }
+
+        /* ========================================== */
+        /* 5. تنسيق Logy AI المحسن */
+        /* ========================================== */
+        .chat-container { display: flex; flex-direction: column; height: 100%; width: 100%; max-width: 800px; margin: 0 auto; }
+        .chat-messages {
+            flex-grow: 1; overflow-y: auto; padding: 20px 15px; display: flex; flex-direction: column; gap: 15px;
+            background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px;
+        }
+        .chat-input-area {
+            padding: 15px; background: var(--background-dark); border-top: 1px solid var(--background-light);
+            display: flex; gap: 10px; align-items: center; flex-shrink: 0; padding-bottom: 25px;
+        }
+        .message-bubble { max-width: 80%; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.5; position: relative; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); animation: popIn 0.3s ease; }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .msg-ai { align-self: flex-start; background: var(--background-light); color: white; border-bottom-right-radius: 2px; border: 1px solid rgba(255,255,255,0.05); }
+        .msg-user { align-self: flex-end; background: var(--accent); color: white; border-bottom-left-radius: 2px; }
+        
+        /* ========================================== */
+        /* 6. الإشعارات (Toast) */
+        /* ========================================== */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 350px; }
+        .toast {
+            background: rgba(13, 27, 42, 0.95); color: white; padding: 12px 15px; border-radius: 50px;
+            font-size: 14px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 10px;
+            animation: slideDown 0.3s ease, fadeOut 0.3s ease 2.7s forwards; border: 1px solid var(--primary); justify-content: center;
+        }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+
+        /* ========================================== */
+        /* 7. العناصر الأخرى */
+        /* ========================================== */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 6000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--background-light); padding: 20px; border-radius: var(--radius); width: 100%; max-width: 400px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        
+        .accordion-item { background: var(--background-light); margin-bottom: 8px; border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        .accordion-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items:center; font-weight: bold; transition:background 0.3s; }
+        .accordion-header:hover { background: rgba(255,212,0,0.1); }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: var(--background-dark); }
+        .accordion-inner { padding: 15px; font-size: 14px; color: #ccc; line-height: 1.6; }
+
+        .float-btn { 
+            position: fixed; bottom: 30px;
+            width: 50px; height: 50px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 22px; z-index: 4000; cursor: pointer; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition: transform 0.2s; 
+        }
+        .float-btn:active { transform: scale(0.9); }
+        
+        .sidebar-panel { background: var(--background-light); padding: 15px; border-radius: var(--radius); margin-bottom: 10px; }
+        .sidebar-panel h3 { color: var(--primary); margin: 0 0 10px 0; font-size: 16px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        
+        .step-row { display: flex; align-items: center; gap: 15px; padding: 12px; background: var(--background-light); margin-bottom: 8px; border-radius: var(--radius); }
+        .step-circle { width: 30px; height: 30px; background: var(--background-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--text-muted); border: 2px solid #333; }
+        .step-row.done .step-circle { background: var(--success); border-color: var(--success); color: white; }
+        .step-row.done { border-left: 4px solid var(--success); }
+        .dispute-card { background: var(--background-light); padding: 15px; border-radius: var(--radius); margin-bottom: 10px; border-left: 4px solid var(--danger); }
+
+    </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<!-- الهيدر -->
+<div class="header">
+    <div class="header-top">
+        <div class="logo"><i class="fa-solid fa-store"></i> Forsale</div>
+        <div class="status-bar">
+            <div class="status-indicator">
+                <i id="statusIcon" class="fa-solid fa-circle-xmark" style="color:var(--danger)"></i>
+                <span id="usernameText" style="margin:0 5px">زائر</span>
+            </div>
+            <button id="langToggleTop" class="action-btn" onclick="toggleLanguage()" style="background:var(--accent);">EN</button>
+        </div>
+    </div>
+    <div class="header-actions-scroll">
+        <button id="netBtn" class="action-btn" onclick="toggleNetwork()">Testnet</button>
+        <button id="connectBtn" class="action-btn" onclick="piConnect()" data-ar="اتصال" data-en="Connect">اتصال</button>
+        <button id="cartBtn" class="action-btn" style="display:none;" onclick="openCartModal()"><i class="fa-solid fa-cart-shopping"></i></button>
+        <button id="ordersBtn" class="action-btn" style="display:none;" onclick="openOrdersModal()" data-ar="طلباتي" data-en="Orders"><i class="fa-solid fa-list-check"></i></button>
+        <button id="verifyBtn" class="action-btn" style="display:none;" onclick="openVerificationPage()" data-ar="توثيق" data-en="Verify"><i class="fa-solid fa-shield-halved"></i></button>
+        <button id="sellBtn" class="action-btn" style="display:none;" onclick="openAddProductPage()" data-ar="بيع" data-en="Sell"><i class="fa-solid fa-plus"></i></button>
+        <button id="logoutBtn" class="action-btn" style="display:none;" onclick="piLogout()" data-ar="خروج" data-en="Logout">خروج</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="controls">
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="بحث ذكي..." onkeyup="handleAISearch()">
+            <button class="action-btn" style="background:none;"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+    </div>
+    <div class="main-layout">
+        <div class="products-area">
+            <div id="cats" class="category-bar"></div>
+            <div id="productList"></div>
+        </div>
+        <div class="sidebar-area">
+            <div class="sidebar-panel">
+                <h3>سلة التسوق</h3>
+                <div id="cartAreaSidebar" style="max-height:150px; overflow-y:auto; font-size:13px;">فارغة</div>
+                <div id="cartTotalSidebar" style="margin-top:10px; text-align:center; font-weight:bold; color:var(--primary);">0.00 Pi</div>
+            </div>
+            <div class="sidebar-panel">
+                <h3>تحليل البائع</h3>
+                <div id="sellerAnalyzerPanel" style="font-size:13px; color:#ccc;">يجب التوثيق أولاً</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- الصفحات الكاملة -->
+
+<!-- 1. صفحة تفاصيل المنتج المحسّنة -->
+<div id="productDetailPage" class="full-page-overlay">
+    <div class="overlay-header">
+        <span class="overlay-title" data-ar="تفاصيل المنتج" data-en="Product Details">تفاصيل المنتج</span>
+        <button class="close-btn" onclick="closeProductDetailPage()">&times;</button>
+    </div>
+    <div id="detailContent" class="overlay-content">
+        <!-- صورة المنتج -->
+        <div id="detailImage" style="position:relative; margin-bottom:15px;"></div>
+        
+        <!-- بطاقة المعلومات الرئيسية -->
+        <div style="background:var(--background-light); padding:15px; border-radius:var(--radius); margin-bottom:15px;">
+            <div id="detailBadges" style="margin-bottom:10px;"></div>
+            <h1 id="detailTitle" style="color:var(--primary); font-size:22px; margin:0 0 5px 0;"></h1>
+            <div id="detailPrice" style="font-size:26px; color:var(--success); font-weight:bold; margin-bottom:10px;"></div>
+            <div id="detailRatingInfo" style="color:#999; font-size:14px; margin-bottom:20px;"></div>
+            
+            <!-- تحليل AI للسعر -->
+            <div id="aiPriceAnalysis" style="background:rgba(74,144,226,0.1); border:1px solid var(--accent); padding:12px; border-radius:8px; margin-bottom:15px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <i class="fa-solid fa-robot" style="color:var(--accent);"></i>
+                    <strong style="color:var(--accent);">تحليل AI للسعر</strong>
+                </div>
+                <div id="aiPriceText" style="font-size:13px; line-height:1.6;"></div>
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+                <button onclick="addToCartFromPage()" class="action-btn" style="flex:1; background:var(--accent); padding:12px; font-size:16px; justify-content:center;">أضف للسلة</button>
+                <button onclick="buyNowFromPage()" class="action-btn" style="flex:1; background:var(--primary); color:black; padding:12px; font-size:16px; justify-content:center;">شراء الآن</button>
+            </div>
+        </div>
+
+        <!-- بطاقة معلومات البائع -->
+        <div id="sellerCard" style="background:var(--background-light); padding:15px; border-radius:var(--radius); margin-bottom:15px; border:2px solid rgba(255,212,0,0.3);">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                <div id="sellerAvatar" style="width:50px; height:50px; border-radius:50%; background:linear-gradient(135deg, var(--primary), var(--accent)); display:flex; align-items:center; justify-content:center; font-size:24px; color:white;">👤</div>
+                <div style="flex:1;">
+                    <div id="sellerName" style="color:var(--primary); font-weight:bold; font-size:16px;"></div>
+                    <div id="sellerStats" style="color:#999; font-size:12px;"></div>
+                </div>
+                <div id="sellerVerified" style="background:var(--success); padding:4px 10px; border-radius:20px; font-size:11px; color:white;"></div>
+            </div>
+            <div id="sellerAiScore" style="background:rgba(46,204,113,0.1); border:1px solid var(--success); padding:10px; border-radius:8px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:13px;">نقاط الثقة AI</span>
+                    <span id="trustScore" style="color:var(--success); font-weight:bold; font-size:18px;"></span>
+                </div>
+                <div style="background:rgba(255,255,255,0.1); height:8px; border-radius:4px; margin-top:8px; overflow:hidden;">
+                    <div id="trustBar" style="background:var(--success); height:100%; transition:width 0.5s;"></div>
+                </div>
+            </div>
+            <div id="sellerInsights" style="font-size:12px; color:#ccc; line-height:1.5;"></div>
+        </div>
+
+        <!-- بطاقة الشحن -->
+        <div style="background:var(--background-light); padding:15px; border-radius:var(--radius); margin-bottom:15px; border:2px solid rgba(74,144,226,0.3);">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                <i class="fa-solid fa-truck-fast" style="color:var(--accent); font-size:20px;"></i>
+                <strong style="color:var(--accent); font-size:16px;">معلومات الشحن</strong>
+            </div>
+            <div id="shippingOptions" style="display:flex; flex-direction:column; gap:10px;"></div>
+            <div id="aiShippingTip" style="background:rgba(74,144,226,0.1); padding:10px; border-radius:8px; margin-top:12px; font-size:13px; border-left:3px solid var(--accent);">
+                <i class="fa-solid fa-lightbulb" style="color:var(--primary);"></i>
+                <span id="shippingTipText" style="margin-right:8px;"></span>
+            </div>
+        </div>
+
+        <!-- الأكورديون -->
+        <div id="accordionContainer"></div>
+
+        <!-- قسم المراجعات -->
+        <div style="background:var(--background-light); padding:15px; border-radius:var(--radius); margin-bottom:15px;">
+            <h3 style="color:var(--primary); margin:0 0 15px 0; display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-star"></i> تقييمات العملاء
+            </h3>
+            <div id="reviewsContainer"></div>
+            <div id="aiReviewSummary" style="background:rgba(255,212,0,0.1); padding:12px; border-radius:8px; margin-top:15px; border:1px solid var(--primary);">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <i class="fa-solid fa-brain" style="color:var(--primary);"></i>
+                    <strong style="color:var(--primary);">ملخص AI للتقييمات</strong>
+                </div>
+                <div id="aiSummaryText" style="font-size:13px; line-height:1.6;"></div>
+            </div>
+        </div>
+
+        <!-- توصيات مشابهة -->
+        <div style="background:var(--background-light); padding:15px; border-radius:var(--radius); margin-bottom:15px;">
+            <h3 style="color:var(--primary); margin:0 0 15px 0;">منتجات مشابهة قد تعجبك</h3>
+            <div id="similarProducts" style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. صفحة إضافة منتج -->
+<div id="addProductPage" class="full-page-overlay">
+    <div class="overlay-header">
+        <span class="overlay-title" data-ar="إضافة منتج جديد" data-en="Add New Product">إضافة منتج جديد</span>
+        <button class="close-btn" onclick="closeAddProductPage()">&times;</button>
+    </div>
+    <div class="overlay-content">
+        <form onsubmit="submitProduct(event)">
+            <div class="form-group">
+                <label data-ar="صورة المنتج" data-en="Product Image">صورة المنتج</label>
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <p data-ar="اضغط لرفع صورة" data-en="Tap to upload">اضغط لرفع صورة</p>
+                    <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="previewFile()">
+                </div>
+                <img id="previewImg" style="width:100%; height:200px; object-fit:contain; margin-top:10px; display:none; border-radius:var(--radius); border:1px solid #333;">
+            </div>
+            <div class="form-group"><label>اسم المنتج</label><input id="pName" required></div>
+            <div class="form-group"><label>الفئة</label><select id="productCat"></select></div>
+            <div class="form-group"><label>السعر (Pi)</label><input type="number" id="pPrice" required></div>
+            <div class="form-group"><label>الوصف التفصيلي</label><textarea id="pDesc" rows="4"></textarea></div>
+            <div id="analysisStatus" style="display:none; color:var(--accent); margin-bottom:10px; font-size:14px;"><i class="fa-solid fa-spinner fa-spin"></i> جاري التحليل...</div>
+            <button type="submit" id="submitBtn" class="action-btn" style="width:100%; background:var(--success); padding:12px; font-size:16px; justify-content:center;">نشر المنتج</button>
+        </form>
+    </div>
+</div>
+
+<!-- 3. صفحة النزاعات -->
+<div id="disputePage" class="full-page-overlay">
+    <div class="overlay-header">
+        <span class="overlay-title" data-ar="مركز النزاعات" data-en="Dispute Center">مركز النزاعات</span>
+        <button class="close-btn" onclick="closeDisputePage()">&times;</button>
+    </div>
+    <div class="overlay-content">
+        <h3 style="color:var(--text-light); margin-top:0;">سجل النزاعات</h3>
+        <div id="disputeList" style="margin-bottom:20px;"></div>
+        <hr style="border-color:#333; margin-bottom:20px;">
+        <h3 style="color:var(--text-light);">تقديم شكوى جديدة</h3>
+        <form onsubmit="submitDispute(event)">
+            <div class="form-group"><label>رقم الطلب</label><input type="text" id="disputeOrderId" value="ORD-101"></div>
+            <div class="form-group"><label>وصف الشكوى</label><textarea id="disputeComplaint" rows="4" placeholder="اشرح المشكلة..."></textarea></div>
+            <button type="submit" class="action-btn" style="width:100%; background:var(--danger); padding:12px; font-size:16px; justify-content:center;">رفع النزاع</button>
+        </form>
+    </div>
+</div>
+
+<!-- 4. صفحة التوثيق -->
+<div id="verificationPage" class="full-page-overlay">
+    <div class="overlay-header">
+        <span class="overlay-title">توثيق الحساب</span>
+        <button class="close-btn" onclick="closeVerificationPage()">&times;</button>
+    </div>
+    <div class="overlay-content">
+        <div id="verifSteps">
+            <div class="step-row" id="step1"><div class="step-circle">1</div><div>ربط المحفظة</div></div>
+            <div class="step-row" id="step2"><div class="step-circle">2</div><div>KYC</div></div>
+            <div class="step-row" id="step3"><div class="step-circle">3</div><div>فحص AI</div></div>
+            <div class="step-row" id="step4"><div class="step-circle">4</div><div>تفعيل البائع</div></div>
+        </div>
+        <button onclick="startVerification()" class="action-btn" style="width:100%; margin-top:20px; background:var(--success); padding:12px; font-size:16px; justify-content:center;">بدء التوثيق الآن</button>
+    </div>
+</div>
+
+<!-- 5. صفحة Logy AI -->
+<div id="logyPage" class="full-page-overlay">
+    <div class="overlay-header">
+        <span class="overlay-title"><i class="fa-solid fa-robot"></i> Logy AI</span>
+        <button class="close-btn" onclick="closeLogyPage()">&times;</button>
+    </div>
+    <div class="chat-container">
+        <div id="logyAiChat" class="chat-messages"></div>
+        <div class="chat-input-area">
+            <input type="text" id="logyInput" placeholder="اسأل عن سعر، شحن..." style="margin:0; flex:1;">
+            <button onclick="sendLogyMessage()" class="action-btn" style="background:var(--success); padding:10px 20px;"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
+
+<!-- المودالات الصغيرة -->
+<div id="cartModal" class="modal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeCartModal()" style="position:absolute; top:10px; right:10px; color:var(--danger);">&times;</button>
+        <h3 style="color:var(--primary); margin-top:0;">سلة التسوق</h3>
+        <div id="cartAreaModal" style="max-height:300px; overflow-y:auto; margin:15px 0;"></div>
+        <div id="cartTotalModal" style="text-align:center; font-weight:bold; color:var(--primary); margin-bottom:15px;">0.00 Pi</div>
+        <button onclick="piCheckout()" class="action-btn" style="width:100%; background:var(--success); justify-content:center;">دفع (Testnet)</button>
+    </div>
+</div>
+
+<div id="ordersModal" class="modal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeOrdersModal()" style="position:absolute; top:10px; right:10px; color:var(--danger);">&times;</button>
+        <h3 style="color:var(--primary); margin-top:0;">طلباتي</h3>
+        <div id="ordersList" style="max-height:300px; overflow-y:auto;"></div>
+    </div>
+</div>
+
+<!-- الأزرار العائمة -->
+<div class="float-btn" style="left:20px; background:var(--success); color:white;" onclick="openLogyPage()"><i class="fa-solid fa-comments"></i></div>
+<div class="float-btn" style="right:20px; background:var(--primary); color:var(--secondary);" onclick="openDisputePage()"><i class="fa-solid fa-scale-balanced"></i></div>
+
+<script>
+// ============================================
+// البيانات والمنطق
+// ============================================
+const PRODUCTS = [
+    {id:'p1',cat:'cars', name_ar:'تويوتا كورولا 2018', name_en:'Toyota Corolla 2018', price:120000, img:'https://placehold.co/300x200/FFD400/0D1B2A?text=Corolla', rating:4.3, verified:true, ai_approved:false, review_count: 12},
+    {id:'p2',cat:'electronics', name_ar:'هاتف Pi الذكي', name_en:'Pi Smartphone', price:85.5, img:'https://placehold.co/300x200/4A90E2/FFF?text=Pi+Phone', rating:4.9, verified:true, ai_approved:true, review_count: 55},
+    {id:'p3',cat:'real', name_ar:'شقة فاخرة', name_en:'Luxury Apt', price:550000, img:'https://placehold.co/300x200/2ECC71/FFF?text=Home', rating:4.6, verified:false, ai_approved:false, review_count: 7},
+    {id:'p4',cat:'fashion', name_ar:'ساعة ذكية', name_en:'Smart Watch', price:15.99, img:'https://placehold.co/300x200/FFD400/0D1B2A?text=Watch', rating:4.1, verified:true, ai_approved:true, review_count: 31}
+];
+const CATEGORIES = [{key:'all',ar:'الكل',en:'All'}, {key:'cars',ar:'سيارات',en:'Cars'}, {key:'electronics',ar:'إلكترونيات',en:'Electronics'}, {key:'real',ar:'عقارات',en:'Real Estate'}, {key:'fashion',ar:'أزياء',en:'Fashion'}];
+const RICH_DETAILS = {
+    'p1': { specs_ar: {'المحرك': 'V4 1.6L', 'المسافة': '120k'}, specs_en: {'Engine': 'V4 1.6L', 'Mileage': '120k'}, seller: 'Ali Cars', desc_ar:'سيارة بحالة الوكالة.', desc_en:'Mint condition.' },
+    'p2': { specs_ar: {'الذاكرة': '256GB', 'رام': '12GB'}, specs_en: {'Storage': '256GB', 'RAM': '12GB'}, seller: 'Pi Tech', desc_ar:'أحدث إصدار.', desc_en:'Latest edition.' },
+    'DEFAULT': { specs_ar: {'الحالة': 'جديد'}, specs_en: {'Condition': 'New'}, seller: 'Verified Seller', desc_ar:'منتج عالي الجودة.', desc_en:'High quality.' }
+};
+const MOCK_DISPUTES = [{id:'D001', orderId:'ORD-100', complaint:'المنتج لم يصل', status:'قيد المراجعة', resolved:false}];
+
+let cart = [], lang = 'ar', piConnected = false, userVerified = false, network = 'Testnet', currentProdId = null, orders = [], logyMsgs = [], uploadedImageBase64 = '';
+
+document.addEventListener('DOMContentLoaded', () => { translateUI(); renderCats(); renderProducts(PRODUCTS); populateCatSelect(); });
+
+// الإشعارات (Toast)
+function showToast(msg, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    const icon = type === 'success' ? '<i class="fa-solid fa-circle-check" style="color:var(--success)"></i>' : '<i class="fa-solid fa-circle-info" style="color:var(--primary)"></i>';
+    toast.innerHTML = `${icon} <span>${msg}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+function translateUI() {
+    document.documentElement.setAttribute('dir', lang==='ar'?'rtl':'ltr');
+    document.getElementById('langToggleTop').textContent = lang==='ar'?'EN':'AR';
+    document.querySelectorAll('[data-ar]').forEach(el => el.textContent = lang==='ar' ? el.getAttribute('data-ar') : el.getAttribute('data-en'));
+    renderCats(); renderProducts(PRODUCTS); renderCart(); updateUserUI();
+    const logy = document.querySelector('.float-btn:first-of-type'); const disp = document.querySelector('.float-btn:last-of-type');
+    if(lang==='ar') { logy.style.left='20px'; logy.style.right='auto'; disp.style.right='20px'; disp.style.left='auto'; }
+    else { logy.style.left='auto'; logy.style.right='20px'; disp.style.right='auto'; disp.style.left='20px'; }
+}
+window.toggleLanguage = () => { lang=lang==='ar'?'en':'ar'; translateUI(); }
+
+function updateUserUI() {
+    const btns = ['cartBtn','logoutBtn','ordersBtn','verifyBtn','sellBtn'];
+    document.getElementById('connectBtn').style.display = piConnected ? 'none' : 'inline-flex';
+    btns.forEach(b => document.getElementById(b).style.display = piConnected ? 'inline-flex' : 'none');
+    document.getElementById('verifyBtn').style.display = (piConnected && !userVerified) ? 'inline-flex' : 'none';
+    document.getElementById('sellBtn').style.display = userVerified ? 'inline-flex' : 'none';
+    if(piConnected) {
+        document.getElementById('statusIcon').style.color = 'var(--success)';
+        document.getElementById('usernameText').textContent = userVerified ? 'Mahmoud (Ver)' : 'Mahmoud_Pi';
+        if(userVerified) document.getElementById('sellerAnalyzerPanel').innerHTML = '<span style="color:var(--success)">بائع موثوق</span>';
+    } else {
+        document.getElementById('statusIcon').style.color = 'var(--danger)';
+        document.getElementById('usernameText').textContent = lang==='ar'?'زائر':'Guest';
+    }
+}
+window.piConnect = () => { piConnected=true; updateUserUI(); showToast(lang==='ar'?'تم الاتصال':'Connected'); }
+window.piLogout = () => { piConnected=false; userVerified=false; cart=[]; renderCart(); updateUserUI(); showToast(lang==='ar'?'تم الخروج':'Logged out', 'info'); }
+window.toggleNetwork = () => { network = network==='Testnet'?'Mainnet':'Testnet'; document.getElementById('netBtn').textContent=network; showToast('Network: '+network, 'info'); }
+
+function renderCats() { document.getElementById('cats').innerHTML = CATEGORIES.map(c => `<div class="cat" onclick="filterCat('${c.key}', this)">${lang==='ar'?c.ar:c.en}</div>`).join(''); }
+window.filterCat = (k, el) => { document.querySelectorAll('.cat').forEach(c=>c.classList.remove('active')); el.classList.add('active'); renderProducts(k==='all'?PRODUCTS:PRODUCTS.filter(p=>p.cat===k)); }
+
+function renderProducts(list) {
+    document.getElementById('productList').innerHTML = list.map(p => `
+        <div class="product" onclick="openProductDetailPage('${p.id}')">
+            <div class="fav-btn" onclick="event.stopPropagation(); this.classList.toggle('active'); showToast(this.classList.contains('active')?'Added to Fav':'Removed from Fav')"><i class="fa-solid fa-heart"></i></div>
+            <div class="badges">${p.ai_approved ? '<span class="badge badge-ai">AI</span>' : ''}${p.verified ? '<span class="badge badge-ver">✓</span>' : ''}</div>
+            <img src="${p.img}">
+            <div class="product-content">
+                <div class="title">${lang==='ar'?p.name_ar:p.name_en}</div>
+                <div class="price-row"><div class="price">${p.price} Pi</div><div class="seller-rating">${p.rating} ★</div></div>
+                <button class="action-btn" style="width:100%; margin-top:5px; justify-content:center;" onclick="event.stopPropagation(); addToCart('${p.id}')">${lang==='ar'?'أضف':'Add'}</button>
+            </div>
+        </div>`).join('');
+}
+
+window.openProductDetailPage = (id) => {
+    currentProdId = id; 
+    const p = PRODUCTS.find(x=>x.id===id); 
+    const d = RICH_DETAILS[id] || RICH_DETAILS['DEFAULT']; 
+    const isAr = lang==='ar';
+    
+    document.getElementById('productDetailPage').style.display='flex';
+    
+    // صورة المنتج
+    document.getElementById('detailImage').innerHTML = `
+        <img src="${p.img}" style="width:100%; height:300px; object-fit:cover; border-radius:var(--radius); box-shadow:0 8px 20px rgba(0,0,0,0.3);">
+    `;
+    
+    // المعلومات الأساسية
+    document.getElementById('detailTitle').textContent = isAr?p.name_ar:p.name_en;
+    document.getElementById('detailPrice').textContent = p.price + ' Pi';
+    document.getElementById('detailRatingInfo').innerHTML = `
+        <span style="color:var(--primary);">${'★'.repeat(Math.floor(p.rating))}</span>
+        <span style="color:#666;">${'★'.repeat(5-Math.floor(p.rating))}</span>
+        <span style="margin:0 8px;">${p.rating}</span>
+        <span style="color:#666;">(${p.review_count || 0} ${isAr?'تقييم':'reviews'})</span>
+    `;
+    
+    document.getElementById('detailBadges').innerHTML = 
+        (p.ai_approved ? '<span class="badge badge-ai"><i class="fa-solid fa-robot"></i> AI Approved</span>' : '') + 
+        (p.verified ? '<span class="badge badge-ver"><i class="fa-solid fa-shield-check"></i> Verified</span>' : '');
+    
+    // تحليل AI للسعر
+    const avgPrice = p.price;
+    const priceStatus = p.price < avgPrice * 0.9 ? 'ممتاز' : p.price < avgPrice * 1.1 ? 'جيد' : 'مرتفع';
+    const priceColor = p.price < avgPrice * 0.9 ? 'var(--success)' : p.price < avgPrice * 1.1 ? 'var(--primary)' : 'var(--danger)';
+    document.getElementById('aiPriceText').innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <span>حالة السعر:</span>
+            <strong style="color:${priceColor}">${priceStatus}</strong>
+        </div>
+        <p style="margin:5px 0 0 0; color:#bbb;">
+            ${isAr ? 'بناءً على تحليل 1,247+ منتج مشابه، هذا السعر يعتبر ' + priceStatus + ' جداً. متوسط السوق: ' + (avgPrice * 1.15).toFixed(2) + ' Pi'
+            : 'Based on 1,247+ similar products, this price is considered ' + priceStatus + '. Market avg: ' + (avgPrice * 1.15).toFixed(2) + ' Pi'}
+        </p>
+    `;
+    
+    // معلومات البائع
+    const trustScore = p.verified ? (88 + Math.floor(Math.random() * 10)) : (65 + Math.floor(Math.random() * 15));
+    document.getElementById('sellerName').textContent = d.seller;
+    document.getElementById('sellerStats').textContent = `${320 + Math.floor(Math.random() * 100)} ${isAr?'منتج مباع':'products sold'} • ${isAr?'عضو منذ':'Member since'} 2022`;
+    document.getElementById('sellerVerified').innerHTML = p.verified ? '<i class="fa-solid fa-badge-check"></i> موثق' : 'غير موثق';
+    document.getElementById('sellerVerified').style.background = p.verified ? 'var(--success)' : '#666';
+    document.getElementById('trustScore').textContent = trustScore + '/100';
+    document.getElementById('trustBar').style.width = trustScore + '%';
+    document.getElementById('sellerInsights').innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; text-align:center;">
+            <div><div style="color:var(--primary); font-weight:bold; font-size:16px;">98%</div><div>توصيل ناجح</div></div>
+            <div><div style="color:var(--primary); font-weight:bold; font-size:16px;">4.8</div><div>تقييم البائع</div></div>
+            <div><div style="color:var(--primary); font-weight:bold; font-size:16px;">24h</div><div>وقت الرد</div></div>
+        </div>
+    `;
+    
+    // خيارات الشحن
+    const shippingOptions = [
+        {name: isAr?'شحن عادي':'Standard', time:'3-5 أيام', price:'مجاني', icon:'truck'},
+        {name: isAr?'شحن سريع':'Express', time:'1-2 أيام', price:'5 Pi', icon:'shipping-fast', recommended:true},
+        {name: isAr?'استلام فوري':'Pickup', time:'اليوم', price:'مجاني', icon:'shop'}
+    ];
+    document.getElementById('shippingOptions').innerHTML = shippingOptions.map(opt => `
+        <div style="background:${opt.recommended?'rgba(255,212,0,0.15)':'rgba(255,255,255,0.05)'}; padding:12px; border-radius:8px; border:1px solid ${opt.recommended?'var(--primary)':'#333'}; display:flex; align-items:center; gap:12px; position:relative;">
+            ${opt.recommended ? '<div style="position:absolute; top:-8px; right:10px; background:var(--primary); color:black; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold;">موصى به</div>' : ''}
+            <i class="fa-solid fa-${opt.icon}" style="color:var(--accent); font-size:20px;"></i>
+            <div style="flex:1;">
+                <div style="font-weight:bold; color:white;">${opt.name}</div>
+                <div style="font-size:12px; color:#999;">${opt.time}</div>
+            </div>
+            <div style="color:${opt.price==='مجاني'?'var(--success)':'var(--primary)'}; font-weight:bold;">${opt.price}</div>
+        </div>
+    `).join('');
+    document.getElementById('shippingTipText').textContent = isAr ? 
+        'AI ينصح بالشحن السريع لهذا المنتج - نسبة الرضا 96%' : 
+        'AI recommends Express shipping - 96% satisfaction rate';
+    
+    // الأكورديون
+    let specHtml = '<div style="display:grid; gap:10px;">'; 
+    for(let k in (isAr?d.specs_ar:d.specs_en)) {
+        specHtml += `
+            <div style="display:flex; justify-content:space-between; padding:8px; background:rgba(255,255,255,0.05); border-radius:6px;">
+                <span style="color:#999;">${k}</span>
+                <span style="color:white; font-weight:bold;">${(isAr?d.specs_ar:d.specs_en)[k]}</span>
+            </div>`;
+    }
+    specHtml += '</div>';
+    
+    document.getElementById('accordionContainer').innerHTML = `
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAcc(this)">
+                <span><i class="fa-solid fa-align-left"></i> ${isAr?'الوصف التفصيلي':'Description'}</span>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="accordion-content" style="max-height:150px;">
+                <div class="accordion-inner">${isAr?d.desc_ar:d.desc_en}</div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAcc(this)">
+                <span><i class="fa-solid fa-list-check"></i> ${isAr?'المواصفات الفنية':'Technical Specs'}</span>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="accordion-content">
+                <div class="accordion-inner">${specHtml}</div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAcc(this)">
+                <span><i class="fa-solid fa-shield"></i> ${isAr?'الضمان والإرجاع':'Warranty & Returns'}</span>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="accordion-content">
+                <div class="accordion-inner">
+                    <div style="color:#bbb; line-height:1.8;">
+                        ✓ ضمان 12 شهر من التاجر<br>
+                        ✓ إمكانية الإرجاع خلال 14 يوم<br>
+                        ✓ فحص الجودة قبل الشحن<br>
+                        ✓ دعم فني مجاني
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // المراجعات
+    const mockReviews = [
+        {name: 'أحمد محمد', rating: 5, text: 'منتج ممتاز والتوصيل كان سريع جداً!', verified: true, time: 'منذ 3 أيام'},
+        {name: 'Sara Ali', rating: 4, text: 'Good quality, matches description', verified: true, time: '1 week ago'},
+        {name: 'محمود عبدالله', rating: 5, text: 'البائع محترم والمنتج فوق التوقعات', verified: false, time: 'منذ أسبوعين'}
+    ];
+    document.getElementById('reviewsContainer').innerHTML = mockReviews.map(rev => `
+        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-bottom:10px; border-right:3px solid ${rev.rating>=4?'var(--success)':'var(--primary)'};">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <div>
+                    <strong style="color:white;">${rev.name}</strong>
+                    ${rev.verified ? '<span style="color:var(--success); font-size:11px; margin-right:5px;"><i class="fa-solid fa-badge-check"></i> مشتري موثق</span>' : ''}
+                </div>
+                <span style="color:#666; font-size:12px;">${rev.time}</span>
+            </div>
+            <div style="color:var(--primary); margin-bottom:5px;">${'★'.repeat(rev.rating)}${'☆'.repeat(5-rev.rating)}</div>
+            <div style="color:#bbb; font-size:13px; line-height:1.6;">${rev.text}</div>
+        </div>
+    `).join('');
+    
+    document.getElementById('aiSummaryText').innerHTML = `
+        <div style="color:#ddd;">
+            <strong>التحليل الإيجابي:</strong> ${isAr?'جودة ممتازة (89%)، توصيل سريع (94%)، قيمة مقابل السعر (91%)':'Excellent quality (89%), Fast delivery (94%), Value for money (91%)'}<br>
+            <strong>نقاط التحسين:</strong> ${isAr?'التغليف يحتاج تحسين (12% من المراجعات)':'Packaging needs improvement (12% of reviews)'}
+        </div>
+    `;
+    
+    // منتجات مشابهة
+    const similar = PRODUCTS.filter(x => x.id !== id && x.cat === p.cat).slice(0, 4);
+    document.getElementById('similarProducts').innerHTML = similar.map(sp => `
+        <div onclick="openProductDetailPage('${sp.id}')" style="background:rgba(255,255,255,0.05); border-radius:8px; overflow:hidden; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <img src="${sp.img}" style="width:100%; height:100px; object-fit:cover;">
+            <div style="padding:8px;">
+                <div style="color:white; font-size:12px; margin-bottom:5px;">${isAr?sp.name_ar:sp.name_en}</div>
+                <div style="color:var(--primary); font-weight:bold;">${sp.price} Pi</div>
+            </div>
+        </div>
+    `).join('');
+    
+    document.getElementById('detailContent').scrollTop = 0;
+}
+
+window.closeProductDetailPage = () => document.getElementById('productDetailPage').style.display='none';
+window.toggleAcc = (h) => { h.classList.toggle('active'); let c = h.nextElementSibling; c.style.maxHeight = c.style.maxHeight ? null : c.scrollHeight + "px"; }
+window.addToCartFromPage = () => addToCart(currentProdId);
+window.buyNowFromPage = () => { addToCart(currentProdId); openCartModal(); closeProductDetailPage(); };
+
+window.addToCart = (id) => { const p = PRODUCTS.find(x=>x.id===id); const ex = cart.find(x=>x.id===id); if(ex) ex.qty++; else cart.push({...p, qty:1}); renderCart(); showToast(lang==='ar'?'تمت الإضافة':'Added'); }
+
+function renderCart() {
+    let total=0; const html = cart.map((i,idx) => { total+=i.price*i.qty; return `<div style="display:flex;justify-content:space-between;padding:5px;border-bottom:1px dashed #444;"><span>${i.qty}x ${lang==='ar'?i.name_ar:i.name_en}</span><span>${(i.price*i.qty).toFixed(2)}</span><span onclick="cart.splice(${idx},1);renderCart()" style="color:red;cursor:pointer;">x</span></div>`; }).join('') || (lang==='ar'?'فارغة':'Empty');
+    const txt = total.toFixed(2) + ' Pi';
+    document.getElementById('cartAreaSidebar').innerHTML = html; document.getElementById('cartTotalSidebar').textContent = txt;
+    document.getElementById('cartAreaModal').innerHTML = html; document.getElementById('cartTotalModal').textContent = txt;
+}
+
+window.openCartModal = () => document.getElementById('cartModal').style.display='flex';
+window.closeCartModal = () => document.getElementById('cartModal').style.display='none';
+window.piCheckout = () => { if(!piConnected)return showToast('Connect First', 'info'); orders.push({id:'ORD-'+Date.now(), total:document.getElementById('cartTotalModal').textContent}); cart=[]; renderCart(); closeCartModal(); showToast('Payment Successful'); }
+
+window.previewFile = () => { const file = document.getElementById('fileInput').files[0]; if (file) { const reader = new FileReader(); reader.onloadend = function () { document.getElementById('previewImg').src = reader.result; document.getElementById('previewImg').style.display = 'block'; uploadedImageBase64 = reader.result; }; reader.readAsDataURL(file); } }
+
+window.openAddProductPage = () => { document.getElementById('addProductPage').style.display='flex'; populateCatSelect(); }
+window.closeAddProductPage = () => document.getElementById('addProductPage').style.display='none';
+
+function populateCatSelect() { document.getElementById('productCat').innerHTML = CATEGORIES.filter(c=>c.key!=='all').map(c=>`<option value="${c.key}">${lang==='ar'?c.ar:c.en}</option>`).join(''); }
+
+window.submitProduct = (e) => {
+    e.preventDefault(); 
+    document.getElementById('analysisStatus').style.display='block'; 
+    document.getElementById('submitBtn').disabled = true;
+    setTimeout(()=>{
+        const finalImg = uploadedImageBase64 || 'https://placehold.co/300x200/1A2E44/FFD400?text=New+Item';
+        PRODUCTS.unshift({ 
+            id:'p'+Date.now(), 
+            cat: document.getElementById('productCat').value, 
+            name_ar: document.getElementById('pName').value, 
+            name_en: document.getElementById('pName').value, 
+            price: parseFloat(document.getElementById('pPrice').value), 
+            img: finalImg, 
+            rating: 5, 
+            verified: true, 
+            ai_approved: true,
+            review_count: 0
+        });
+        renderProducts(PRODUCTS); 
+        closeAddProductPage(); 
+        document.getElementById('analysisStatus').style.display='none'; 
+        document.getElementById('submitBtn').disabled = false; 
+        showToast('Published!'); 
+        e.target.reset(); 
+        document.getElementById('previewImg').style.display='none';
+        uploadedImageBase64 = '';
+    }, 1500);
+}
+
+window.openVerificationPage = () => { 
+    document.getElementById('verificationPage').style.display='flex'; 
+    if(piConnected) document.getElementById('step1').classList.add('done'); 
+}
+window.closeVerificationPage = () => document.getElementById('verificationPage').style.display='none';
+
+window.startVerification = () => { 
+    if(!piConnected) return showToast('Connect First', 'info'); 
+    let s=2; 
+    const i = setInterval(()=>{ 
+        if(s>4) { 
+            clearInterval(i); 
+            userVerified=true; 
+            updateUserUI(); 
+            closeVerificationPage(); 
+            showToast('Verified!'); 
+        } else { 
+            document.getElementById('step'+s).classList.add('done'); 
+            s++; 
+        } 
+    }, 800); 
+}
+
+window.openDisputePage = () => { 
+    document.getElementById('disputePage').style.display = 'flex'; 
+    renderDisputes(); 
+}
+window.closeDisputePage = () => document.getElementById('disputePage').style.display = 'none';
+
+function renderDisputes() { 
+    const container = document.getElementById('disputeList'); 
+    if(MOCK_DISPUTES.length === 0) { 
+        container.innerHTML = '<div style="text-align:center; color:#777;">No disputes</div>'; 
+        return; 
+    } 
+    container.innerHTML = MOCK_DISPUTES.map(d => `
+        <div class="dispute-card">
+            <span class="dispute-status" style="color:${d.resolved?'var(--success)':'var(--primary)'}">${d.status}</span>
+            <div><strong>${d.orderId}</strong></div>
+            <div style="font-size:12px; color:#aaa; margin-top:5px;">${d.complaint}</div>
+        </div>
+    `).join(''); 
+}
+
+window.submitDispute = (e) => { 
+    e.preventDefault(); 
+    const oid = document.getElementById('disputeOrderId').value; 
+    const comp = document.getElementById('disputeComplaint').value; 
+    if(!oid || !comp) return showToast('Fill fields', 'info'); 
+    showToast('Analyzing...'); 
+    setTimeout(() => { 
+        MOCK_DISPUTES.unshift({ 
+            id: 'D'+Date.now(), 
+            orderId: oid, 
+            complaint: comp, 
+            status: 'Solved', 
+            resolved: true 
+        }); 
+        renderDisputes(); 
+        showToast('Resolved!'); 
+        e.target.reset();
+    }, 1500); 
+}
+
+// Logy AI
+window.openLogyPage = () => { 
+    document.getElementById('logyPage').style.display='flex'; 
+    if(logyMsgs.length===0) logyMsgs.push({s:'ai',t:lang==='ar'?'مرحباً! كيف أساعدك؟':'Hello! How can I help?'}); 
+    renderChat(); 
+}
+window.closeLogyPage = () => document.getElementById('logyPage').style.display='none';
+
+function renderChat() { 
+    const c = document.getElementById('logyAiChat'); 
+    c.innerHTML = logyMsgs.map(m => `<div class="message-bubble ${m.s==='ai'?'msg-ai':'msg-user'}">${m.t}</div>`).join(''); 
+    c.scrollTop = c.scrollHeight; 
+}
+
+window.sendLogyMessage = () => {
+    const i = document.getElementById('logyInput'); 
+    const t = i.value.trim(); 
+    if(!t)return;
+    logyMsgs.push({s:'u', t:t}); 
+    i.value=''; 
+    renderChat();
+    setTimeout(()=>{ 
+        logyMsgs.push({s:'ai', t:lang==='ar'?'سأتحقق من ذلك...':'Checking that...'}); 
+        renderChat(); 
+    }, 800);
+}
+
+window.openOrdersModal = () => { 
+    document.getElementById('ordersList').innerHTML = orders.map(o=>`
+        <div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; margin-bottom:8px;">
+            <strong style="color:var(--primary);">${o.id}</strong>
+            <div style="color:#999; font-size:13px; margin-top:5px;">Total: ${o.total}</div>
+        </div>
+    `).join('') || '<div style="text-align:center; color:#777;">No Orders</div>'; 
+    document.getElementById('ordersModal').style.display='flex'; 
+}
+window.closeOrdersModal = () => document.getElementById('ordersModal').style.display='none';
+
+window.handleAISearch = () => { 
+    const v = document.getElementById('search-input').value.toLowerCase(); 
+    renderProducts(PRODUCTS.filter(p=>p.name_en.toLowerCase().includes(v) || p.name_ar.includes(v))); 
+}
+
+</script>
+</body>
+</html>
